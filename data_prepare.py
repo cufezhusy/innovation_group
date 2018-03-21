@@ -1,10 +1,11 @@
 # Helper module regarding to test data
+# Encoding: utf-8
 import os
 import pandas as pd
 import datetime as dt
 import numpy as np
 import pickle
-path = r"C:\working\data_2012_07_2012_12\data"
+path = r"H:\working\data_2012_07_2012_12\data"
 
 def all_stock_name():
     filenames = os.listdir(path)
