@@ -33,11 +33,13 @@ def x_y_for_single_stock(df,stock_name):
 
         x_start,x_end = return_x_time(d1)
         x_df = df[x_start:x_end]
-        X[i, :, :, :] = x_df.values.reshape((210, 6, 1))
+        temp_x = x_df.values
+        temp_x = temp_x / np.sum(temp_x, axis=0,keepdims=True)
+        X[i, :, :, :] = temp_x.reshape((210, 6, 1))
 
         y_start, y_end = return_y_time(d1)
         y_df = df[y_start:y_end]
-        Y[i,0] = (y_df)
+        Y[i,0] = y_singal(y_df)
         pos.append([stock_name,d1])
 
     return X,Y,pos
@@ -46,10 +48,10 @@ def return_x_time(date):
     return (dt.datetime(date.year,date.month,date.day,9,0),
             dt.datetime(date.year, date.month, date.day, 14, 30))
 
-def buy_singal(df):
+def y_singal(df):
     buy_price = float(df[df.index == df.index.min()]['Close'])
     sell_price = float(df[df.index == df.index.max()]['Close'])
-    return (sell_price - buy_price)/buy_price > 0.01
+    return (sell_price - buy_price)/buy_price
 
 def number_to_category(num):
     return
@@ -57,7 +59,7 @@ def number_to_category(num):
 
 def return_y_time(d1):
     return (dt.datetime(d1.year,d1.month,d1.day,14,30),
-            dt.datetime(d2.year, d1.month, d1.day, 14,31))
+            dt.datetime(d1.year, d1.month, d1.day, 14,31))
 
 def save_test_case(X,Y,Pos):
     with open('test_case.pickle', 'wb') as fp:
@@ -69,7 +71,7 @@ def save_test_case(X,Y,Pos):
 if __name__ == '__main__':
     from tqdm import tqdm
     all_names = all_stock_name()
-    sample = 500
+    sample = 20
     X = np.zeros((0,210,6,1))
     Y = np.zeros((0,1))
     Pos = []
