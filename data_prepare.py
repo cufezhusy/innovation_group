@@ -49,9 +49,9 @@ def return_x_time(date):
             dt.datetime(date.year, date.month, date.day, 14, 30))
 
 def y_singal(df):
-    buy_price = float(df[df.index == df.index.min()]['Close'])
-    sell_price = float(df[df.index == df.index.max()]['Close'])
-    return (sell_price - buy_price)/buy_price
+    price1 = float(df[df.index == df.index.min()]['Close'])
+    price2 = float(df[df.index == df.index.max()]['Close'])
+    return (price2 - price1)/price1
 
 def number_to_category(num):
     return
