@@ -96,13 +96,13 @@ if __name__ == "__main__":
     importances = list(rf.feature_importances_)
 
     # List of tuples with variable and importance
-    feature_importance = [(feature, round(importance, 2)) for feature, importance in zip(feature_list, importances)]
+    #feature_importance = [(feature, round(importance, 2)) for feature, importance in zip(feature_list, importances)]
 
     # Sort the feature importances by most important first
-    feature_importance = sorted(feature_importance, key = lambda x: x[1], reverse = True)
+    #feature_importance = sorted(feature_importance, key = lambda x: x[1], reverse = True)
 
     # Print out the feature and importances
-    [print('Variable: {:20} Importance: {}'.format(*pair)) for pair in feature_importance];
+    #[print('Variable: {:20} Importance: {}'.format(*pair)) for pair in feature_importance];
 
     #plot_var_importance()
     #plot_predicted_val()
