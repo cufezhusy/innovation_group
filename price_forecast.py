@@ -34,7 +34,7 @@ if __name__ == "__main__":
     pos = out['Pos']
 
     # Saving feature names for later use
-    feature_list = list(features.columns)
+    #feature_list = list(features.columns)
 
     # Split the data into training and testing sets common model_helper
     train_features, test_features, train_labels, test_labels = divide_data(X, Y)
@@ -51,8 +51,12 @@ if __name__ == "__main__":
     #rf.fit(train_features, train_labels)
     rf.fit(d2_train_features, train_labels)
 
+    # Reshape test features from 4 dim to 2 dim
+    nsamples, nx, ny, nz = test_features.shape
+    d2_test_features = test_features.reshape((nsamples, nx * ny * nz))
+
     # Make predictions with the model by using the forest's predict method on the test data
-    predictions = rf.predict(test_features)
+    predictions = rf.predict(d2_test_features)
     #print(predictions)
 
     # Calculate the absolute erros
