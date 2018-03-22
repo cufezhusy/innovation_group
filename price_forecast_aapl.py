@@ -4,7 +4,6 @@
 from __future__ import print_function
 from __future__ import division
 
-from model_helper import load_test_case, divide_data
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import export_graphviz
@@ -18,35 +17,72 @@ import math
 
 # functions
 
-def print_shapes():
-    print("Training Features Shape:", train_features.shape)
-    print("Training Labels Shape:", train_labels.shape)
-    print("Test Features Shape:", test_features.shape)
-    print("Test Labels Shape:", test_labels.shape)
-
 if __name__ == "__main__":
     pd.set_option('expand_frame_repr', False)
 
-    # Load from common model_helper
-    out = load_test_case()
-    X = out['X']
-    Y = out['Y']
-    pos = out['Pos']
+    features = pd.read_csv("C:\\Users\\g47193\\PycharmProjects\\MachineLearning\\data\\aapl_1.csv")
 
-    # Split the data into training and testing sets common model_helper
-    train_features, test_features, train_labels, test_labels = divide_data(X, Y)
-    print_shapes()
+    #print(features[:5])
 
-    # Reshape train features from 4 dim to 2 dim
-    nsamples, nx, ny, nz = train_features.shape
-    d2_train_features = train_features.reshape((nsamples, nx * ny * nz))
+
+    print("The shape of our features is:", features.shape)
+
+    # Descriptive statistics for each column
+    #print(features.describe())
+    #plt.plot(features['temp_2'])
+    #plt.show()
+
+    # One-hot encode the data using pandas get_dummies
+    #features = pd.get_dummies(features)
+
+    # Display the first rows of the last 12 columns
+    #print(features.iloc[:,5:][:5])
+
+    # Use numpy to convert to arrays
+    # Labels are the values we want to predict
+    labels = np.array(features['Close'])
+    #labels = np.array(features['actual'])
+    #print(labels)
+
+    # Remove the labels from the features
+    # axis 1 refers to the columns
+    #features = features.drop(['Close'], axis=1)
+    features = features.drop(['Close'], axis=1)
+    features = features.drop(['Open'], axis=1)
+    features = features.drop(['Return'], axis=1)
+    features = features.drop(['Year'], axis=1)
+    features = features.drop(['Month'], axis=1)
+    features = features.drop(['Day'], axis=1)
+
+    # Saving feature names for later use
+    feature_list = list(features.columns)
+
+    # Convert to numpy array
+    features = np.array(features)
+
+    # Split the data into training and testing sets Using Skicit-learn
+    train_features, test_features, train_labels, test_labels = \
+        train_test_split(features, labels, test_size=0.25, random_state = 42)
+
+    #print("Training Features Shape:", train_features.shape)
+    #print("Training Labels Shape:", train_labels.shape)
+    #print("Test Features Shape:", test_features.shape)
+    #print("Test Labels Shape:", test_labels.shape)
+
+    # https://towardsdatascience.com/random-forest-in-python-24d0893d51c0
+    # The baseline predictions are the historical averages
+    # baseline_preds = test_features[:,feature_list.index('average')]
+
+    # Baseline errors, and display average baseline error
+    # baseline_errors = abs(baseline_preds - test_labels)
+
+    # print("Average baseline error: ", round(np.mean(baseline_errors), 2), "degrees.")
 
     # Instantiate model with 1000 decision trees, set n_jobs = -1 = number of cores
     rf = RandomForestRegressor(n_estimators=1000, n_jobs=-1, random_state=42)
 
     # Train the model on training data
-    #rf.fit(train_features, train_labels)
-    rf.fit(d2_train_features, train_labels)
+    rf.fit(train_features, train_labels)
 
     # Make predictions with the model by using the forest's predict method on the test data
     predictions = rf.predict(test_features)
