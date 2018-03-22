@@ -1,0 +1,31 @@
+# normal stuff
+*.asv 
+*.m~ 
+*.mex* 
+*.log
+*.log.html
+*.pyc
+*.xml
+*.iml
+*.xls
+*.xlsx
+*.pickle
+*.swp
+**/*.egg-info/*
+*.doctree
+*.json
+*.csv
+.idea/*
+# ignore everything in some docs folder
+docs/_build/*
+docs/Makefile
+docs/make.bat
+config/personal_config.cmd
+# unit test ignore
+test/unit_test/file/csv_IO/actual/*
+# added by Shengyao 2017.6.30, ignore html by default but not in folder ad-hoc/LocalScaling/static
+*.html
+!ad-hoc/LocalScaling/static/*.html
+*.rst
+!ad-hoc/LocalScaling/static/*.rst
+
