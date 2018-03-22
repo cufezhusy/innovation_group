@@ -33,9 +33,12 @@ if __name__ == "__main__":
     Y = out['Y']
     pos = out['Pos']
 
+    # Saving feature names for later use
+    feature_list = list(features.columns)
+
     # Split the data into training and testing sets common model_helper
     train_features, test_features, train_labels, test_labels = divide_data(X, Y)
-    print_shapes()
+    #print_shapes()
 
     # Reshape train features from 4 dim to 2 dim
     nsamples, nx, ny, nz = train_features.shape
