@@ -1,5 +1,4 @@
 # Helper module regarding to test data
-# Encoding: utf-8
 import os
 import pandas as pd
 import datetime as dt
@@ -70,13 +69,13 @@ def save_test_case(X,Y,Pos):
 
 
 if __name__ == '__main__':
-    from tqdm import tqdm
+    #from tqdm import tqdm
     all_names = all_stock_name()
     sample = 20
     X = np.zeros((0,210,6,1))
     Y = np.zeros((0,1))
     Pos = []
-    for name in tqdm(all_names[0:sample]):
+    for name in all_names[0:sample]:
         df = single_stock_data(name)
         X_s,Y_s,pos = x_y_for_single_stock(df,name)
         X = np.concatenate((X, X_s), axis=0)
