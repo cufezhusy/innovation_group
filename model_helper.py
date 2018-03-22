@@ -19,6 +19,18 @@ def model_diff(predict,test_y):
     return np.nan_to_num(temp)
 
 
+def hist_gram(predict,y_test):
+    plt.hist(model_diff(predict, y_test))
+    plt.title("Gaussian Histogram")
+    plt.xlabel("Value")
+    plt.ylabel("Frequency")
+    plt.show()
+
+def corr_plt(predict,y_test):
+    plt.plot(predict, y_test, 'ro')
+    plt.show()
+
+
 if __name__ == '__main__':
     out = load_test_case()
     X = out['X']
@@ -26,15 +38,7 @@ if __name__ == '__main__':
     pos = out['Pos']
     X_train, X_test, y_train, y_test= divide_data(X,Y)
 
-    y_predict = y_test*1.02
-    plt.hist(model_diff(y_predict,y_test))
-    plt.title("Gaussian Histogram")
-    plt.xlabel("Value")
-    plt.ylabel("Frequency")
+    y_predict = y_test*1.6
 
-    fig = plt.gcf()
-    fig.show()
-
-
-    plt.plot(y_predict,y_test)
-    fig.show()
+    plt.plot(y_predict,y_test,'ro')
+    plt.show()
