@@ -5,6 +5,7 @@ from keras.layers import Dense, Input, Dropout, LSTM, Activation
 from keras.layers.embeddings import Embedding
 from keras.preprocessing import sequence
 from keras.initializers import glorot_uniform
+from keras.activations import sigmoid
 np.random.seed(1)
 from model_helper import load_test_case, divide_data
 from model_helper import corr_plt
@@ -24,10 +25,9 @@ def Price_Forecast(input_shape):
     """
 
     ### START CODE HERE ###
-    # Define embeddings as the input of the graph, it should be of shape input_shape and dtype 'int32' (as it contains indices).
     embeddings = Input(shape=input_shape, dtype=np.float32)
 
-    print (embeddings.shape, "....")
+    print(embeddings.shape, "....")
     # Propagate the embeddings through an LSTM layer with 128-dimensional hidden state
     # Be careful, the returned output should be a batch of sequences.
     X = LSTM(128, return_sequences=True)(embeddings)
@@ -39,10 +39,7 @@ def Price_Forecast(input_shape):
     # Add dropout with a probability of 0.5
     X = Dropout(0.5)(X)
     # Propagate X through a Dense layer with softmax activation to get back a batch of 5-dimensional vectors.
-    X = Dense(1, activation='sigmoid')(X)
-    #X = Dense(1)(X)
-    # Add a softmax activation
-    # X = Activation('sigmoid')(X)
+    X = Dense(1, activation=custom_activation)(X)
 
     # Create Model instance which converts embeddings into X.
     model = Model(embeddings, X)
@@ -50,6 +47,9 @@ def Price_Forecast(input_shape):
     ### END CODE HERE ###
 
     return model
+
+def custom_activation(x):
+    return (sigmoid(x)/5) - 0.1
 
 if __name__ == '__main__':
     # load data
@@ -66,19 +66,20 @@ if __name__ == '__main__':
     model = Price_Forecast(inputShape)
     model.summary()
 
-    model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
+    model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mae', 'acc'])
 
     print(np.squeeze(train_features, axis=3).shape)
 
     print(train_labels.shape)
 
-    model.fit(np.squeeze(train_features, axis=3), train_labels, epochs=1, batch_size=128, shuffle=True)
+    model.fit(np.squeeze(train_features, axis=3), train_labels, epochs=5, batch_size=32, shuffle=True)
+
+    # evaluate the model performance
+    #loss, acc = model.evaluate(np.squeeze(test_features, axis=3), test_labels)
+    #print("Test accuracy = ", acc)
+    test_predict = model.predict(np.squeeze(test_features, axis=3))
+    train_predict = model.predict(np.squeeze(train_features, axis=3))
 
 
-    loss, acc = model.evaluate(np.squeeze(test_features, axis=3), test_labels)
-    print()
-    print("Test accuracy = ", acc)
-    predict = model.predict(np.squeeze(test_features, axis=3))
-    print(predict)
-
-    corr_plt(predict,test_labels)
+    corr_plt(train_predict,train_labels)
+    corr_plt(test_predict,test_labels)
