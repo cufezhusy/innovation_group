@@ -28,18 +28,19 @@ def Price_Forecast(input_shape):
     embeddings = Input(shape=input_shape, dtype=np.float32)
 
     print(embeddings.shape, "....")
+    X = embeddings
     # Propagate the embeddings through an LSTM layer with 128-dimensional hidden state
     # Be careful, the returned output should be a batch of sequences.
-    X = LSTM(128, return_sequences=True)(embeddings)
+    #X = LSTM(32, return_sequences=True)(embeddings)
     # Add dropout with a probability of 0.5
-    X = Dropout(0.5)(X)
+    #X = Dropout(0.5)(X)
     # Propagate X trough another LSTM layer with 128-dimensional hidden state
     # Be careful, the returned output should be a single hidden state, not a batch of sequences.
-    X = LSTM(128)(X)
+    X = LSTM(32)(X)
     # Add dropout with a probability of 0.5
-    X = Dropout(0.5)(X)
+    #X = Dropout(0.5)(X)
     # Propagate X through a Dense layer with softmax activation to get back a batch of 5-dimensional vectors.
-    X = Dense(1, activation=custom_activation)(X)
+    X = Dense(1)(X)
 
     # Create Model instance which converts embeddings into X.
     model = Model(embeddings, X)
@@ -72,7 +73,7 @@ if __name__ == '__main__':
 
     print(train_labels.shape)
 
-    model.fit(np.squeeze(train_features, axis=3), train_labels, epochs=5, batch_size=32, shuffle=True)
+    model.fit(np.squeeze(train_features, axis=3), train_labels, epochs=20, batch_size=32, shuffle=True)
 
     # evaluate the model performance
     #loss, acc = model.evaluate(np.squeeze(test_features, axis=3), test_labels)
