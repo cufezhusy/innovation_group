@@ -9,7 +9,7 @@ from model_helper import divide_data
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-from keras.models import Model
+from keras.models import Model,Sequential
 from keras.layers import Dense, Input, Dropout, LSTM, Activation
 
 
@@ -28,7 +28,7 @@ def single_stock_data(stock_name):
     return df
 
 def x_y_new(df):
-    N = 60
+    N = 120
     M = len(df) - N - 10
     X = np.zeros((M, N, 1))
     Y = np.zeros((M, 1))
@@ -55,14 +55,12 @@ def return_y_time(d1):
 
 # Model: Price_Forecast
 def Price_Forecast(input_shape):
-    embeddings = Input(shape=input_shape, dtype=np.float64)
 
-    print(embeddings.shape, "....")
-    X = embeddings
-    X = LSTM(32)(X)
-    #X = Dense(1)(X)
-    X = Dense(1,activation="tanh")(X)
-    model = Model(embeddings, X)
+    # create and fit the LSTM network
+    model = Sequential()
+    model.add(LSTM(16,input_shape=input_shape))
+    #model.add(LSTM(16))
+    model.add(Dense(1))
     return model
 
 
@@ -81,11 +79,11 @@ X, Y = x_y_new(df)
 print(X.shape)
 print(Y.shape)
 
-slice = 200
+slice = 500
 X=X[0:slice,:,:]
 Y=Y[0:slice,:]
 
-#X = (X - min (X))/(max(X) - min(X))
+X = (X -X.min(axis=0))/(X.max(axis=0) - X.min(axis=0))
 Y = (Y - min (Y))/(max(Y) - min(Y))
 
 
@@ -104,19 +102,23 @@ print(train_labels.shape)
 
 fig = plt.figure()
 axes1 = fig.add_subplot(111)
-line, = axes1.plot(train_labels,np.zeros(train_labels.shape))
+line, = axes1.plot(train_labels,np.zeros(train_labels.shape),'ro')
+axes1.set_ylim([min(train_labels),max(train_labels)])
 def corr_plt(data):
     line.set_ydata(data)
     return line,
 
 
-def one_step_predict():
+def one_step_predict(model):
     model.fit(train_features, train_labels, epochs=1, batch_size=64, shuffle=True)
-    model.reset_states()
     train_predict = model.predict(train_features)
-    return train_predict
+    return train_predict,model
 
+aa = []
+for i in range(30):
+    predict,model = one_step_predict(model)
+    aa.append(predict.tolist())
 
-ani = animation.FuncAnimation(fig, corr_plt, one_step_predict, interval=2*1000)
+ani = animation.FuncAnimation(fig, corr_plt, aa,interval=2*1000)
 plt.show()
 
