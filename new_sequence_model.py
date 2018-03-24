@@ -27,15 +27,27 @@ def single_stock_data(stock_name):
     # header=['date','time','open','high','low','close','outstanding','turnover']
     return df
 
-def x_y_new(df):
+def x_y_new(df,slice = None):
     N = 120
-    M = len(df) - N - 10
+    if slice == None:
+        M = len(df) - N -1
+    else:
+        M = slice
+
     X = np.zeros((M, N, 1))
     Y = np.zeros((M, 1))
+    # get the close price from the df
     Z = df.values
+    Z = Z[0:M+N+1,3]
+
+    # calculate the relative return
+    #Z_diff = np.diff(Z)/Z[0:-1]
+    Z_diff = Z
+    Z_diff = (Z_diff - min(Z_diff)) / (max(Z_diff) - min(Z_diff))
+
     for i in range(M):
-        X[i, :, 0] = Z[i:i + N, 3]
-        Y[i,0] = (Z[i + N , 3] - Z[i + N-1, 3])/Z[i + N-1, 3]
+        X[i, :, 0] = Z_diff[i:i + N]
+        Y[i,0] = Z_diff[i+N]
         #forward = Z[i + N + 1, 3] - Z[i + N, 3]
         #now = Z[i + N, 3] - Z[i + N - 1, 3]
         #if forward * now < 0:
@@ -43,23 +55,13 @@ def x_y_new(df):
 
     return X, Y
 
-
-def number_to_category(num):
-    return
-
-
-def return_y_time(d1):
-    return (dt.datetime(d1.year, d1.month, d1.day, 14, 30),
-            dt.datetime(d1.year, d1.month, d1.day, 14, 31))
-
-
 # Model: Price_Forecast
 def Price_Forecast(input_shape):
 
     # create and fit the LSTM network
     model = Sequential()
-    model.add(LSTM(16,input_shape=input_shape))
-    #model.add(LSTM(16))
+    model.add(LSTM(4,return_sequences=True,input_shape=input_shape))
+    model.add(LSTM(4))
     model.add(Dense(1))
     return model
 
@@ -74,18 +76,10 @@ Pos = []
 
 name = all_names[2]
 df = single_stock_data(name)
-X, Y = x_y_new(df)
+X, Y = x_y_new(df,slice=5000)
 
 print(X.shape)
 print(Y.shape)
-
-slice = 500
-X=X[0:slice,:,:]
-Y=Y[0:slice,:]
-
-X = (X -X.min(axis=0))/(X.max(axis=0) - X.min(axis=0))
-Y = (Y - min (Y))/(max(Y) - min(Y))
-
 
 train_features, test_features, train_labels, test_labels = divide_data(X, Y)
 
@@ -101,12 +95,20 @@ print(train_labels.shape)
 
 
 fig = plt.figure()
-axes1 = fig.add_subplot(111)
+axes1 = fig.add_subplot(121)
+axes2 = fig.add_subplot(122)
 line, = axes1.plot(train_labels,np.zeros(train_labels.shape),'ro')
+line2, = axes2.plot(test_labels,np.zeros(test_labels.shape),'bo')
 axes1.set_ylim([min(train_labels),max(train_labels)])
+axes2.set_ylim([min(test_labels),max(test_labels)])
 def corr_plt(data):
     line.set_ydata(data)
     return line,
+
+def corr_plt2(data):
+    line2.set_ydata(data)
+    return line2,
+
 
 
 def one_step_predict(model):
@@ -115,10 +117,16 @@ def one_step_predict(model):
     return train_predict,model
 
 aa = []
-for i in range(30):
+bb = []
+for i in range(10):
     predict,model = one_step_predict(model)
     aa.append(predict.tolist())
+    test_predict= model.predict(test_features)
+    bb.append(test_predict)
 
-ani = animation.FuncAnimation(fig, corr_plt, aa,interval=2*1000)
+ani = animation.FuncAnimation(fig, corr_plt, aa,interval=1000)
+ani2 = animation.FuncAnimation(fig, corr_plt2, bb,interval=1000)
 plt.show()
+
+
 
