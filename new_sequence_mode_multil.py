@@ -1,15 +1,13 @@
 import numpy as np
 np.random.seed(1)
 import numpy as np
-import datetime as dt
 import os
 import pandas as pd
-from model_helper import divide_data
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from keras.models import Model,Sequential,save_model,load_model
 from keras.layers import Dense, Input, Dropout, LSTM, Activation
-
+from sklearn.model_selection import train_test_split
 
 # ===================================================================================
 # Data loading part
@@ -27,22 +25,24 @@ def single_stock_data(stock_name):
     # header=['date','time','open','high','low','close','outstanding','turnover']
     return df
 
+def divide_data(X,Y):
+    return train_test_split(X, Y,test_size = 0.05, random_state = 42)
 
 # ===================================================================================
 # Generate x and y
 # ===================================================================================
 def x_y_new(df,slice = None, start = 0):
-    N = 120
+    N = 30
     if slice == None:
         M = len(df) - N -1 - start
     else:
         M = slice
 
-    X = np.zeros((M, N, 4))
+    X = np.zeros((M, N, 6))
     Y = np.zeros((M, 2))
     # get the close price from the df
     Z = df.values
-    Z = Z[start:start+ M + N,0:4]
+    Z = Z[start:start+ M + N,:]
 
     # calculate the relative return
     #Z_diff = np.diff(Z)/Z[0:-1]
@@ -51,10 +51,11 @@ def x_y_new(df,slice = None, start = 0):
     for i in range(M):
         X[i, :, :] = Z_norm [i:i + N]
 
-    Y[:, 0] = Z_norm[N:N+M,3]  # 'close price'
-    Y[:, 1], invert_func_spread = norm_ts(Z[N:N + M, 2] - Z[N:N + M, 1])  # 'close price'
+    Y[:, 0] = Z_norm[N:N+M,1]  # 'high price'
+    Y[:, 1] = Z_norm[N:N+M,2]  # 'low price'
+    #Y[:, 1], invert_func_spread = norm_ts((Z[N:N + M, 1] - Z[N:N + M, 2])/ Z[N:N + M, 3])  # 'close price'
 
-    return X, Y , invert_func_y,invert_func_spread
+    return X, Y , invert_func_y
 
 
 def norm_ts(Z):
@@ -68,8 +69,8 @@ def norm_ts(Z):
 def Price_Forecast(input_shape):
     # create and fit the LSTM network
     model = Sequential()
-    model.add(LSTM(4,return_sequences=True,input_shape=input_shape))
-    model.add(LSTM(4))
+    model.add(LSTM(4, input_shape=input_shape))
+    #model.add(LSTM(4))
     model.add(Dense(2))
     model.add(Activation('sigmoid'))
     return model
@@ -81,7 +82,7 @@ def one_step_predict(model,train_features, train_labels):
 # ===================================================================================
 # Visualization the model
 # ===================================================================================
-def animation_train_and_test(train_labels,test_labels,train_predict_step,test_perdict_step):
+def animation_train_and_test(train_labels, test_labels, predict_spread_1, predict_spread_2):
     # Configure the training plot
     fig = plt.figure()
     axes1 = fig.add_subplot(121)
@@ -91,7 +92,7 @@ def animation_train_and_test(train_labels,test_labels,train_predict_step,test_pe
     axes1.set_xlabel('Actual')
     axes1.set_ylabel('Model')
     line2, = axes2.plot(test_labels, np.zeros(test_labels.shape), 'bo')
-    axes1.set_title('Testing')
+    axes2.set_title('Spread')
     axes2.set_xlabel('Actual')
     axes2.set_ylabel('Model')
     axes1.set_ylim([min(train_labels), max(train_labels)])
@@ -105,8 +106,8 @@ def animation_train_and_test(train_labels,test_labels,train_predict_step,test_pe
         line2.set_ydata(data)
         return line2,
 
-    ani = animation.FuncAnimation(fig, corr_plt, train_predict_step, interval=1000)
-    ani2 = animation.FuncAnimation(fig, corr_plt2, test_perdict_step, interval=1000)
+    ani = animation.FuncAnimation(fig, corr_plt, predict_spread_1, interval=1000)
+    ani2 = animation.FuncAnimation(fig, corr_plt2, predict_spread_2, interval=1000)
     plt.show()
 
 
@@ -128,8 +129,8 @@ if __name__ == '__main__':
     all_names = all_stock_name()
     name = all_names[2]
     df = single_stock_data(name)
-    dev_set = 5000
-    X, Y, invert_func_y, invert_func_spread = x_y_new(df,slice=dev_set)
+    dev_set = 2000
+    X, Y, invert_func_y = x_y_new(df,slice=dev_set)
     train_features, test_features, train_labels, test_labels = divide_data(X, Y)
     inputShape = test_features[1,:,:].shape
 
@@ -141,29 +142,30 @@ if __name__ == '__main__':
         model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mae'])
         aa = []
         bb = []
+
+        idx = 0
         for i in range(20):
             model = one_step_predict(model,train_features, train_labels)
             train_predict = model.predict(train_features)
             aa.append(train_predict[:,0])
-            test_predict= model.predict(test_features)
-            bb.append(test_predict[:,0])
+            bb.append(train_predict[:,1])
 
         model.save('forcast_3d.h5')
 
         animation_train_and_test(train_labels=train_labels[:,0],
-                                 test_labels=test_labels[:,0],
-                                 train_predict_step=aa,
-                                 test_perdict_step=bb)
+                                 test_labels=train_labels[:,1],
+                                 predict_spread_1=aa,
+                                 predict_spread_2=bb)
 
         plt.show()
 
 
 
 
-    #X_bench, Y_bench, invert_func_bench = x_y_new(df,slice =200,start=3000)
-    #Y_bench_predict = model.predict(X_bench)
+    X_bench, Y_bench, invert_func_bench = x_y_new(df,slice =200,start=3000)
+    Y_bench_predict = model.predict(X_bench)
     #Y_bench_extrapolation = very_simple_benchmark_model(X_bench)
-    #plt.plot(invert_func_bench(Y_bench_predict),'r-')
+    plt.plot(invert_func_bench(Y_bench_predict[:,1]),'r-')
     #plt.plot(invert_func_bench(Y_bench_extrapolation),'g-')
-    #plt.plot(invert_func_bench(Y_bench),'b-')
-    #plt.show()
+    plt.plot(invert_func_bench(Y_bench[:,1]),'b-')
+    plt.show()
