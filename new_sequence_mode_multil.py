@@ -6,7 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from keras.models import Model,Sequential,save_model,load_model
-from keras.layers import Dense, Input, Dropout, LSTM, Activation
+from keras.layers import Dense, Input, Dropout, LSTM, Activation,BatchNormalization
 from sklearn.model_selection import train_test_split
 
 # ===================================================================================
@@ -38,24 +38,32 @@ def x_y_new(df,slice = None, start = 0):
     else:
         M = slice
 
-    X = np.zeros((M, N, 6))
-    Y = np.zeros((M, 2))
+
+    # add time demension
+    X = np.zeros((M, N, 8))
+    Y = np.zeros((M, 1))
+    raw_Z = np.zeros((len(df),8))
     # get the close price from the df
-    Z = df.values
-    Z = Z[start:start+ M + N,:]
+    raw_Z[:,0:6] = df.values
+    raw_Z[:,6] = [x.value for x in df.index]
+    Z = raw_Z[start:start+ M + N,:]
+    Z[:, 7] = (raw_Z[start:start+ M + N, 1] - raw_Z[start:start+ M + N, 2])/ raw_Z[start:start+ M + N, 3]
 
     # calculate the relative return
     #Z_diff = np.diff(Z)/Z[0:-1]
-    Z_norm,invert_func_y = norm_ts(Z)
+    Z_norm = np.zeros(Z.shape)
+    invert_func_dict = {}
+    for s in range(8):
+        Z_norm[:,s],invert_func_dict[s] = norm_ts(Z[:,s])
 
     for i in range(M):
         X[i, :, :] = Z_norm [i:i + N]
 
-    Y[:, 0] = Z_norm[N:N+M,1]  # 'high price'
-    Y[:, 1] = Z_norm[N:N+M,2]  # 'low price'
-    #Y[:, 1], invert_func_spread = norm_ts((Z[N:N + M, 1] - Z[N:N + M, 2])/ Z[N:N + M, 3])  # 'close price'
+    #Y[:, 1] = Z_norm[N:N+M,1]  # 'high price'
+    #Y[:, 1] = Z_norm[N:N+M,2]  # 'low price'
+    Y[:, 0], invert_func_spread = norm_ts((Z[N:N + M, 1] - Z[N:N + M, 2])/ Z[N-1:N + M-1, 3])  # 'close price'
 
-    return X, Y , invert_func_y
+    return X, Y , invert_func_spread,invert_func_dict[2]
 
 
 def norm_ts(Z):
@@ -69,14 +77,20 @@ def norm_ts(Z):
 def Price_Forecast(input_shape):
     # create and fit the LSTM network
     model = Sequential()
-    model.add(LSTM(4, input_shape=input_shape))
-    #model.add(LSTM(4))
-    model.add(Dense(2))
+    #model.add(Dense(16,input_shape=input_shape,kernel_initializer='random_uniform',
+    #            bias_initializer='zeros'))
+    #model.add(LSTM(16))
+    model.add(BatchNormalization(input_shape=input_shape))
+    model.add(LSTM(64, return_sequences=True))
+    model.add(LSTM(64,kernel_initializer='random_uniform'))
+    #model.add(LSTM(64,kernel_initializer='random_uniform'))
+    #model.add(Dense(4,kernel_initializer='random_uniform'))
+    model.add(Dense(1, kernel_initializer='random_uniform'))
     model.add(Activation('sigmoid'))
     return model
 
 def one_step_predict(model,train_features, train_labels):
-    model.fit(train_features, train_labels, epochs=1, batch_size=64, shuffle=True)
+    model.fit(train_features, train_labels, epochs=1, batch_size=32, shuffle=True)
     return model
 
 # ===================================================================================
@@ -88,15 +102,15 @@ def animation_train_and_test(train_labels, test_labels, predict_spread_1, predic
     axes1 = fig.add_subplot(121)
     axes2 = fig.add_subplot(122)
     line, = axes1.plot(train_labels, np.zeros(train_labels.shape), 'ro')
-    axes1.set_title('Training')
+    axes1.set_title('High Price')
     axes1.set_xlabel('Actual')
     axes1.set_ylabel('Model')
     line2, = axes2.plot(test_labels, np.zeros(test_labels.shape), 'bo')
-    axes2.set_title('Spread')
+    axes2.set_title('Low Price')
     axes2.set_xlabel('Actual')
     axes2.set_ylabel('Model')
-    axes1.set_ylim([min(train_labels), max(train_labels)])
-    axes2.set_ylim([min(test_labels), max(test_labels)])
+    axes1.set_ylim([0, 1])
+    axes2.set_ylim([0, 1])
 
     def corr_plt(data):
         line.set_ydata(data)
@@ -127,10 +141,10 @@ def very_simple_benchmark_model(X):
 if __name__ == '__main__':
     path = r"C:\working\data_2012_07_2012_12\data"
     all_names = all_stock_name()
-    name = all_names[2]
+    name = all_names[7]
     df = single_stock_data(name)
-    dev_set = 2000
-    X, Y, invert_func_y = x_y_new(df,slice=dev_set)
+    dev_set = 5000
+    X, Y, invert_func_y1,invert_func_y2 = x_y_new(df,slice=dev_set)
     train_features, test_features, train_labels, test_labels = divide_data(X, Y)
     inputShape = test_features[1,:,:].shape
 
@@ -144,16 +158,17 @@ if __name__ == '__main__':
         bb = []
 
         idx = 0
-        for i in range(20):
+        for i in range(100):
             model = one_step_predict(model,train_features, train_labels)
             train_predict = model.predict(train_features)
-            aa.append(train_predict[:,0])
-            bb.append(train_predict[:,1])
+            aa.append(train_predict)
+            test_predict = model.predict(test_features)
+            bb.append(test_predict)
 
         model.save('forcast_3d.h5')
 
-        animation_train_and_test(train_labels=train_labels[:,0],
-                                 test_labels=train_labels[:,1],
+        animation_train_and_test(train_labels=train_labels,
+                                 test_labels=test_labels,
                                  predict_spread_1=aa,
                                  predict_spread_2=bb)
 
@@ -162,10 +177,11 @@ if __name__ == '__main__':
 
 
 
-    X_bench, Y_bench, invert_func_bench = x_y_new(df,slice =200,start=3000)
+    plt.show()
+    X_bench, Y_bench, invert_func_y1,invert_func_y2 = x_y_new(df,slice =100,start=21000)
     Y_bench_predict = model.predict(X_bench)
     #Y_bench_extrapolation = very_simple_benchmark_model(X_bench)
-    plt.plot(invert_func_bench(Y_bench_predict[:,1]),'r-')
+    plt.plot(invert_func_y1(Y_bench_predict[:,0]),'r-')
     #plt.plot(invert_func_bench(Y_bench_extrapolation),'g-')
-    plt.plot(invert_func_bench(Y_bench[:,1]),'b-')
+    plt.plot(invert_func_y1(Y_bench[:,0]),'b-')
     plt.show()
