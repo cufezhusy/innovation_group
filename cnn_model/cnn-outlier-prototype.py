@@ -1,5 +1,6 @@
 from keras.optimizers import adam
 from helper import *
+from graph import *
 import random
 
 
@@ -11,7 +12,7 @@ from keras.layers import Conv2D, MaxPooling2D
 
 path = r"C:\working\data_2012_07_2012_12\data\SH600036.csv"
 df = get_file_from_csv(path)
-dev_set = 2000
+dev_set = 5000
 # random time
 time_list = df.index.tolist()
 lookback = 20
@@ -29,19 +30,6 @@ indices = random.sample(range(lookback+1, len(time_list)-timewindow), dev_set)
 
 
 X,Y = x_y_new(df,indices,lookback = lookback,time_window = timewindow)
-
-print(X.shape)
-
-
-# In[218]:
-
-
-import matplotlib.pyplot as plt
-idx = 300
-plt.plot(X[idx,:,1,0],'b*' )
-plt.plot(X[idx,:,0,0],'r*-' )
-plt.show()
-print(Y[idx])
 
 # Loading the data (signs)
 X_train,  X_test, Y_train_orig,Y_test_orig= divide_data(X,Y)
@@ -65,10 +53,10 @@ print("Y_test shape: " + str(Y_test.shape))
 # ===================================================================================
 model = Sequential()
 
-model.add(Conv2D(16, (8, 2),padding='same',input_shape=X_train.shape[1:]))
+model.add(Conv2D(64, (8, 2),padding='same',input_shape=X_train.shape[1:]))
 model.add(Activation('relu'))
 model.add(MaxPooling2D(pool_size=(2, 2),padding='same'))
-model.add(Conv2D(16, (8, 2),padding='same'))
+model.add(Conv2D(32, (8, 2),padding='same'))
 model.add(Activation('relu'))
 model.add(MaxPooling2D(pool_size=(4, 4),padding='same'))
 #model.add(Conv2D(16, (4, 4),padding='same'))
@@ -90,13 +78,25 @@ model.compile(loss='categorical_crossentropy',
 model.summary()
 X_train = X_train.astype('float32')
 X_test = X_test.astype('float32')
-model.fit(X_train, Y_train,
-              batch_size=100,
-              epochs=20,
-              validation_data=(X_test, Y_test),
-              shuffle=True)
 
-model.predict(X_test)
-print(Y_test)
+
+batch_history = 500
+y_hat_train_history = []
+y_hat_test_history =[]
+for i in range(20):
+    model.fit(X_train, Y_train,
+                  batch_size=100,
+                  epochs=5,
+                  validation_data=(X_test, Y_test),
+                  shuffle=True)
+
+    y_hat_train = model.predict(X_train[0:batch_history,:,:,:])
+    y_hat_train_history.append(y_hat_train[:,1])
+    y_hat_test = model.predict(X_test)
+    y_hat_test_history.append(y_hat_test[:, 1])
+
+animation_train_and_test(Y_train_orig[0:batch_history],Y_test_orig,y_hat_train_history,y_hat_test_history)
+
+#print(Y_test)
 model.save(r"C:\working\innovation_group\cnn_model\final_model.h5")
 
