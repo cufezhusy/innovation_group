@@ -21,7 +21,7 @@ def animation_train_and_test(Y_train,Y_test, predict_y_train,predict_y_test):
     Y_train_normal = Y_train[Y_train == 0]
     cut = Y_train_abnormal.shape[0]/Y_train.shape[0]
     line_1_0 = axes1.plot(np.array([0,1]),np.array([0.5,0.5]),'k-')
-    line_1_00 = axes1.plot(np.array([0.5, 0.5]), np.array([0, 1]), 'k-')
+    line_1_00 = axes1.plot(np.array([cut, cut]), np.array([0, 1]), 'k-')
     line_1_1, = axes1.plot(np.linspace(0,cut,Y_train_abnormal.shape[0]), np.ones(Y_train_abnormal.shape)*0.5, 'ro')
     line_1_2, = axes1.plot(np.linspace(cut,1,Y_train_normal.shape[0]), np.ones(Y_train_normal.shape)*0.5, 'bo')
     axes1.set_title('Train Set')

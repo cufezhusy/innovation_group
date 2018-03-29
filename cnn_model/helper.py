@@ -35,7 +35,7 @@ def get_file_from_csv(data_path):
 
 
 def divide_data(X, Y):
-    return train_test_split(X, Y, test_size=0.05, random_state=42)
+    return train_test_split(X, Y, test_size=0.02, random_state=42)
 
 
 def norm_ts(Z):

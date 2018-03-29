@@ -12,7 +12,7 @@ from keras.layers import Conv2D, MaxPooling2D
 
 path = r"C:\working\data_2012_07_2012_12\data\SH600036.csv"
 df = get_file_from_csv(path)
-dev_set = 5000
+dev_set = 20000
 # random time
 time_list = df.index.tolist()
 lookback = 20
@@ -80,20 +80,25 @@ X_train = X_train.astype('float32')
 X_test = X_test.astype('float32')
 
 
-batch_history = 500
+batch_history = 1000
 y_hat_train_history = []
 y_hat_test_history =[]
-for i in range(20):
+for i in range(40):
+    y_hat_train = model.predict(X_train[0:batch_history, :, :, :])
+    y_hat_train_history.append(y_hat_train[:, 1])
+    y_hat_test = model.predict(X_test)
+    y_hat_test_history.append(y_hat_test[:, 1])
+
     model.fit(X_train, Y_train,
                   batch_size=100,
                   epochs=5,
                   validation_data=(X_test, Y_test),
                   shuffle=True)
 
-    y_hat_train = model.predict(X_train[0:batch_history,:,:,:])
-    y_hat_train_history.append(y_hat_train[:,1])
-    y_hat_test = model.predict(X_test)
-    y_hat_test_history.append(y_hat_test[:, 1])
+y_hat_train = model.predict(X_train[0:batch_history,:,:,:])
+y_hat_train_history.append(y_hat_train[:,1])
+y_hat_test = model.predict(X_test)
+y_hat_test_history.append(y_hat_test[:, 1])
 
 animation_train_and_test(Y_train_orig[0:batch_history],Y_test_orig,y_hat_train_history,y_hat_test_history)
 
