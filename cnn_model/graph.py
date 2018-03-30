@@ -83,6 +83,8 @@ def get_heat_map(actual,predict):
         auc_score = 1 if predict[s,0] > 0.5 else 0
         AUC[auc_score,int(actual[s,0])] +=1
 
+    AUC = AUC/AUC.sum(keepdims=False)
+
     c = ax.pcolor(AUC, edgecolors='k', linestyle= 'dashed', linewidths=0.2, cmap='YlGn', vmin=0.0, vmax=1.0)
     # put the major ticks at the middle of each cell
     ax.set_yticks(np.arange(AUC.shape[0]) + 0.5, minor=False)
@@ -118,26 +120,11 @@ def show_values(pc, fmt="%.2f", **kw):
         ax.text(x, y, fmt % value, ha="center", va="center", color=color, **kw)
 
 def plot_problem(X,Y,idx):
-    plt.plot(X[idx, :, 1, 0], 'b*')
-    plt.plot(X[idx, :, 0, 0], 'r*-')
+    plt.figure(figsize=[9,2])
+    ax1, = plt.plot(X[idx, :, 1, 0], 'b*', label = 'Trade')
+    ax2, = plt.plot(X[idx, :, 0, 0], 'r*--', label = 'Ticker by Ticker')
+    plt.xlabel('Ticker')
+    plt.ylabel('Price')
+    plt.legend()
+    plt.title("Problem no :%s, Y = %s" %(idx,Y[idx]))
     plt.show()
-    print(Y[idx])
-
-if __name__ == '__main__':
-    import random
-    N = 100
-    M = 50
-
-    Y_train = np.random.randint(0,2,size=(N,1))
-    Y_test =  np.random.randint(0,2,size=(M,1))
-
-    #get_heat_map(Y_train,np.random.random(size=(N,1)))
-    #plt.show()
-    predict_y_train = []
-    predict_y_test = []
-
-    for i in range(50):
-        predict_y_train.append(np.random.random(size=(N,1)))
-        predict_y_test.append(np.random.random(size=(M, 1)))
-
-    animation_train_and_test(Y_train,Y_test,predict_y_train,predict_y_test)

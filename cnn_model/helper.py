@@ -12,7 +12,7 @@ import random
 # ===================================================================================
 # Data loading part
 # ===================================================================================
-def all_stock_name(path = r"C:\working\data_2012_07_2012_12\data\SH600036.csv"):
+def all_stock_name(path = r"C:\working\data_2012_07_2012_12\data"):
     filenames = os.listdir(path)
     temp = [filename for filename in filenames if filename.endswith('.csv')]
     # print temp
