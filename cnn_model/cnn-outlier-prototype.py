@@ -2,8 +2,8 @@
 # Main functions to run and train the model
 # ==================================================================================
 from keras.optimizers import adam
-from helper import *
-from graph import *
+from cnn_model.helper import *
+from cnn_model.graph import *
 import random
 
 

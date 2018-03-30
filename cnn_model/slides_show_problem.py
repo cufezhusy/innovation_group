@@ -1,5 +1,5 @@
-from graph import *
-from helper import *
+from cnn_model.graph import *
+from cnn_model.helper import *
 from keras import models
 import keras
 import random

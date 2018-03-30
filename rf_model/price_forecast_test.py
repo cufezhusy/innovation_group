@@ -4,7 +4,7 @@
 from __future__ import print_function
 from __future__ import division
 
-from model_helper import load_test_case, divide_data
+from old_model.model_helper import load_test_case, divide_data
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import export_graphviz
