@@ -1,3 +1,6 @@
+# ===================================================================================
+# Main functions to run and train the model
+# ==================================================================================
 from keras.optimizers import adam
 from helper import *
 from graph import *
@@ -9,31 +12,24 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 
-
+# load the data
 path = r"SH600036.csv"
 df = get_file_from_csv(path)
+# decide how many datas included in the model part
 dev_set = 20000
-# random time
-time_list = df.index.tolist()
+# decide how many ticker look back before actual trades happen
 lookback = 20
+# decide how many ticker in total compare with the actual trades
 timewindow = 30
+
+# generate random trade heppen times
+time_list = df.index.tolist()
 indices = random.sample(range(lookback+1, len(time_list)-timewindow), dev_set)
-
-
-# In[216]:
-
-
-#
-
-
-# In[217]:
-
-
+# call a function in helper to generate X and Y
 X,Y = x_y_new(df,indices,lookback = lookback,time_window = timewindow)
 
-# Loading the data (signs)
+# Divide the data to training set and testing set
 X_train,  X_test, Y_train_orig,Y_test_orig= divide_data(X,Y)
-
 
 # Convert class vectors to binary class matrices.
 num_classes = 2
@@ -59,9 +55,6 @@ model.add(MaxPooling2D(pool_size=(2, 2),padding='same'))
 model.add(Conv2D(32, (8, 2),padding='same'))
 model.add(Activation('relu'))
 model.add(MaxPooling2D(pool_size=(4, 4),padding='same'))
-#model.add(Conv2D(16, (4, 4),padding='same'))
-#model.add(Activation('relu'))
-#model.add(MaxPooling2D(pool_size=(4, 4),padding='same'))
 model.add(Flatten())
 model.add(Dense(num_classes))
 model.add(Activation('softmax'))
@@ -100,6 +93,8 @@ y_hat_train_history.append(y_hat_train[:,1])
 y_hat_test = model.predict(X_test)
 y_hat_test_history.append(y_hat_test[:, 1])
 
+
+# call a function to generate the movie
 animation_train_and_test(Y_train_orig[0:batch_history],Y_test_orig,y_hat_train_history,y_hat_test_history)
 
 #print(Y_test)

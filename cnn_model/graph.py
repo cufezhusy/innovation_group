@@ -1,5 +1,6 @@
-import matplotlib
-#matplotlib.use("Agg")
+# ===================================================================================
+# Some graph helper functions to visualize the data/model
+# ==================================================================================
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
