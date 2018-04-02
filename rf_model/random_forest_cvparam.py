@@ -29,9 +29,9 @@ def generate_hyper_parameter(model_type, num_est, train_feat, train_lab):
         rfc = RandomForestRegressor(n_estimators=num_est)
         # Values to test CV-optimize Regressor fully grown tree
         param_grid = {
-            'max_features': ['auto', 'sqrt', 'log2'],
-            'max_depth': [5, 7, 10],
-            'min_samples_leaf': [40, 50, 60]
+            'max_features': ['auto'],
+            'max_depth': [2,3,5],
+            'min_samples_leaf': [20,30,40]
         }
     elif model_type == "gb":
         # Instantiate model with num_est decision trees
@@ -39,8 +39,8 @@ def generate_hyper_parameter(model_type, num_est, train_feat, train_lab):
         # Values to test CV-optimize Gradient-Boosting weak learner
         param_grid = {
             'learning_rate': [0.01, 0.001, 0.0001],
-            'max_features': [0.1, 'auto', 'sqrt'],
-            'max_depth': [4, 5, 6],
+            'max_features': ['sqrt'],
+            'max_depth': [3,4,5],
             'min_samples_leaf': [3, 5, 7]
         }
     else:

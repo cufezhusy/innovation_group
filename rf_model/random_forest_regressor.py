@@ -48,8 +48,8 @@ if __name__ == "__main__":
     d2_train_labels = train_labels.reshape((nsamples * nx))
 
     # Instantiate model with n decision trees
-    rf = RandomForestRegressor(n_jobs=2, max_features='sqrt', n_estimators=1000, oob_score=True, random_state=42,
-                                max_depth=10, min_samples_leaf=50)
+    rf = RandomForestRegressor(n_jobs=2, max_features='auto', n_estimators=1000, oob_score=True, random_state=42,
+                                max_depth=10, min_samples_leaf=40)
 
     rf.fit(d2_train_features, d2_train_labels)
 
