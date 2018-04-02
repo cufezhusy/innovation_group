@@ -1,0 +1,7 @@
+path = r"D:\Databashantering\tidsserie\shanghai_se"
+#path = r"D:\Databashantering\tidsserie\shanghai_se\sample"
+
+
+def load_test_case():
+    with open('C:\\Users\\Familj\\PycharmProjects\\innovation_group\\old_model\\test_case.pickle', 'rb') as fp:
+        return pickle.load(fp)
