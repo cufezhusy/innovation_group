@@ -7,18 +7,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class model_result(object):
-    def __init__(self, model, predictions, test_labels, rf_feat_imp, feature_list=None):
+    def __init__(self, model, predictions, test_labels, rf_feat_imp, feature_list):
         self.model = model
         self.predictions = predictions
         self.test_labels = test_labels
         self.rf_feat_imp = rf_feat_imp
+        self.feature_list = feature_list
 
-        if feature_list != None:
-            self.feature_list = feature_list
-
-
-    def get_model_type(self):
-        return self.model_type
+    def get_model(self):
+        return self.model
 
     def get_predictions(self):
         return self.predictions
@@ -34,21 +31,14 @@ class model_result(object):
 
     def save_model(self,file_name):
         try:
-            pickle.dump(self.get_model(),open(file_name,'wb'))
+            pickle.dump(self.get_model(),open(file_name + ".pickle",'wb'))
             print ("Model successfully saved.")
         except Exception as e:
             print ("Model not saved", e)
 
-    def load_model(self,file_name):
-        try:
-            return pickle.load(open(file_name,'rb'))
-            print("Model succesfully loaded.")
-        except Exception as e:
-            print ("Model not loaded", e)
-
     def model_absolute_errors(self):
-        # Calculate the absolute erros
-        return abs(self.get_predictions() - self.test_labels())
+        # Calculate the absolute errors
+        return abs(self.get_predictions() - self.get_test_labels())
 
     def model_mean_absolute_error(self):
         # Return the mean absolute error (mae)
@@ -67,8 +57,9 @@ class model_result(object):
 
     def model_feature_importance(self):
         # List of tuples with variable and importance
-        feature_importance = [(feature, round(self.model_importances(), 2)) for feature, self.model_importances()
-                              in zip(self.get_feature_list(), self.model_importances())]
+        imp_tmp = self.model_importances()
+        feat_list_tmp = self.get_feature_list()
+        feature_importance = [(feature, round(imp_tmp, 2)) for feature, imp_tmp in zip(feat_list_tmp, imp_tmp)]
 
         # Sort the feature importances by most important first
         feature_importance = sorted(feature_importance, key=lambda x: x[1], reverse=True)
@@ -90,3 +81,10 @@ class model_result(object):
         plt.xlabel('Variable')
         plt.title('Variable Importances')
         plt.show()
+
+def load_model(file_name):
+    try:
+        return pickle.load(open(file_name,'rb'))
+        print("Model succesfully loaded.")
+    except Exception as e:
+        print ("Model not loaded", e)
