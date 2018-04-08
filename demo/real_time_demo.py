@@ -18,11 +18,13 @@ mpes_obj.pre_load()
 
 model = keras.models.load_model("final_model.h5")
 
+input("Real time demo is ready, any key to start")
+
 for s in range(len(mpes_obj.temp_list)):
     time.sleep(tick_interval)
     print(mpes_obj.get_tick(s)[1])
 
-    if s > pre_heat_time and random.random() < random_trade_prob:
+    if s > pre_heat_time and random.uniform(0,1) < random_trade_prob:
         print("---------------------------------------------")
         price = input("New trade come in, please input the price:")
         x = generate_x(price,mpes_obj,s)
