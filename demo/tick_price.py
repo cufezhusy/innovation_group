@@ -31,7 +31,7 @@ class market_price_evaluator_service(object):
     def get_tick(self, tick):
         if self.temp_list is None:
             self.pre_load()
-        return float(self.temp_list[tick][0]), float(self.temp_list[tick][1])
+        return self.temp_list[tick][0], float(self.temp_list[tick][1])
 
     def pre_load(self):
         content = self.preprocess_ontetick()
@@ -41,6 +41,9 @@ class market_price_evaluator_service(object):
         self.temp_list = tmp_list
 
 if __name__ == "__main__":
+    import time
     mpes_obj = market_price_evaluator_service(file="tick_data.txt", sym="EUR=")
-    for s in range(10):
+    mpes_obj.pre_load()
+    for s in range(len(mpes_obj.temp_list)):
+        time.sleep(0.1)
         print(mpes_obj.get_tick(s)[1])
